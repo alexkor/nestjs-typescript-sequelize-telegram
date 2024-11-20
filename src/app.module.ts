@@ -2,10 +2,13 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { SequelizeModule } from '@nestjs/sequelize';
-import { UserModule } from './user/user.module';
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({ isGlobal: true, }),
     SequelizeModule.forRoot({
       dialect: 'sqlite',
       storage: 'db/dt.sqlite3',
@@ -14,7 +17,8 @@ import { UserModule } from './user/user.module';
       synchronize: true,
       sync: { force: true },
     }),
-    UserModule,
+    UsersModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
