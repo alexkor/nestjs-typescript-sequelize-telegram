@@ -3,6 +3,8 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as CryptoJS from "crypto-js";
 import { JwtService } from '@nestjs/jwt';
+import { ScriptSignInUserDto } from './dto/ScriptSignInUserDto';
+import { ButtonSignInUserDto } from './dto/ButtonSignInUserDto';
 
 @Injectable()
 export class AuthService {
@@ -14,13 +16,12 @@ export class AuthService {
         this.TELEGRAM_BOT_TOKEN = this.configService.get<string>('TELEGRAM_BOT_TOKEN');
     }
 
-    async ScriptSignIn(userDto: Record<string, any>): Promise<{ access_token: string }> {
-
+    async ScriptSignIn(userDto: ScriptSignInUserDto): Promise<{ access_token: string }> {
         if (!userDto.hash) {
             throw new UnauthorizedException();
         }
 
-        const initData = new URLSearchParams(userDto);
+        const initData = new URLSearchParams(userDto as Record<string, any>);
         let dataToCheck = [];
 
         initData.sort();
@@ -32,18 +33,19 @@ export class AuthService {
         if (userDto.hash !== _hash) {
             throw new UnauthorizedException();
         }
-        const payload = { sub: userDto.id, first_name: userDto.first_name, last_name: userDto.last_name };
+        const user = JSON.parse(userDto.user);
+        const payload = { sub: user.id, first_name: user.first_name, last_name: user.last_name };
         return {
             access_token: await this.jwtService.signAsync(payload),
         };
     }
 
-    async ButtonSignIn(userDto: Record<string, any>): Promise<{ access_token: string }> {
+    async ButtonSignIn(userDto: ButtonSignInUserDto): Promise<{ access_token: string }> {
         if (!userDto.hash) {
             throw new UnauthorizedException();
         }
 
-        const initData = new URLSearchParams(userDto);
+        const initData = new URLSearchParams(userDto as Record<string, any>);
         let dataToCheck = [];
 
         initData.sort();

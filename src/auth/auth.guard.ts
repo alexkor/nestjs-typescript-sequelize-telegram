@@ -12,9 +12,9 @@ import { IS_PUBLIC_KEY } from './Public.decorator';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-    private readonly JWT_SECRET;
+    private readonly TELEGRAM_BOT_TOKEN;
     constructor(private jwtService: JwtService, private configService: ConfigService, private reflector: Reflector) {
-        this.JWT_SECRET = this.configService.get<string>('JWT_SECRET');
+        this.TELEGRAM_BOT_TOKEN = this.configService.get<string>('TELEGRAM_BOT_TOKEN');
     }
     async canActivate(
         context: ExecutionContext,
@@ -35,7 +35,7 @@ export class AuthGuard implements CanActivate {
             const payload = await this.jwtService.verifyAsync(
                 token,
                 {
-                    secret: this.JWT_SECRET
+                    secret: this.TELEGRAM_BOT_TOKEN
                 }
             );
             // 💡 We're assigning the payload to the request object here

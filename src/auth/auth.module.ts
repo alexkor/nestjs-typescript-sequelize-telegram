@@ -10,7 +10,7 @@ import { APP_GUARD } from '@nestjs/core';
   imports: [ConfigModule.forRoot(),
   JwtModule.register({
     global: true,
-    secret: process.env.JWT_SECRET,
+    secret: process.env.TELEGRAM_BOT_TOKEN,
     signOptions: { expiresIn: '24h' },
   }),
   ],
