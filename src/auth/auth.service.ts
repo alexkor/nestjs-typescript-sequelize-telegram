@@ -17,30 +17,26 @@ export class AuthService {
     }
 
     async ScriptSignIn(userDto: ScriptSignInUserDto): Promise<{ access_token: string }> {
-        if (!userDto.hash) {
-            throw new UnauthorizedException();
-        }
-
-        const initData = new URLSearchParams(userDto as Record<string, any>);
-        let dataToCheck = [];
-
-        initData.sort();
-        initData.forEach((val, key) => key !== "hash" && dataToCheck.push(`${key}=${val}`));
-
+        let dataToCheck = this.PrepareDataForHash(userDto);
         const secret = CryptoJS.HmacSHA256(this.TELEGRAM_BOT_TOKEN, "WebAppData");
-        const _hash = CryptoJS.HmacSHA256(dataToCheck.join("\n"), secret).toString(CryptoJS.enc.Hex);
-
-        if (userDto.hash !== _hash) {
-            throw new UnauthorizedException();
-        }
+        this.ValidateHash(dataToCheck, secret, userDto);
         const user = JSON.parse(userDto.user);
-        const payload = { sub: user.id, first_name: user.first_name, last_name: user.last_name };
-        return {
-            access_token: await this.jwtService.signAsync(payload),
-        };
+        return { access_token: await this.SignPayload(user) }
     }
 
     async ButtonSignIn(userDto: ButtonSignInUserDto): Promise<{ access_token: string }> {
+        let dataToCheck = this.PrepareDataForHash(userDto);
+        const secret = CryptoJS.SHA256(this.TELEGRAM_BOT_TOKEN);
+        this.ValidateHash(dataToCheck, secret, userDto);
+        return { access_token: await this.SignPayload(userDto) }
+    }
+
+    private SignPayload(userDto: Record<string, any>) {
+        const payload = { sub: userDto.id, first_name: userDto.first_name, last_name: userDto.last_name };
+        return this.jwtService.signAsync(payload);
+    }
+
+    private PrepareDataForHash(userDto: Record<string, any>) {
         if (!userDto.hash) {
             throw new UnauthorizedException();
         }
@@ -50,16 +46,14 @@ export class AuthService {
 
         initData.sort();
         initData.forEach((val, key) => key !== "hash" && dataToCheck.push(`${key}=${val}`));
+        return dataToCheck;
+    }
 
-        const secret = CryptoJS.SHA256(this.TELEGRAM_BOT_TOKEN);
+    private ValidateHash(dataToCheck: any[], secret: any, userDto: Record<string, any>) {
         const _hash = CryptoJS.HmacSHA256(dataToCheck.join("\n"), secret).toString(CryptoJS.enc.Hex);
 
         if (userDto.hash !== _hash) {
             throw new UnauthorizedException();
         }
-        const payload = { sub: userDto.id, first_name: userDto.first_name, last_name: userDto.last_name };
-        return {
-            access_token: await this.jwtService.signAsync(payload),
-        };
     }
 }
